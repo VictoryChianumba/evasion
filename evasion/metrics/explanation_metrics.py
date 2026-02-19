@@ -21,7 +21,7 @@ def spearman_ch(Ec: torch.Tensor, Ea: torch.Tensor) -> float:
     sc, sa = channel_scores(Ec), channel_scores(Ea)
     vals = []
     for i in range(sc.shape[0]):
-        r = spearmanr(sc[i], sa[i]).statistic
+        r = float(spearmanr(sc[i], sa[i]).statistic)
         if not np.isnan(r):
             vals.append(r)
     return float(np.mean(vals)) if vals else float("nan")
@@ -66,7 +66,7 @@ def roi_spearman(
     sc, sa = channel_scores(Ec), channel_scores(Ea)
     vals = []
     for i in range(sc.shape[0]):
-        r = spearmanr(sc[i, roi_idx], sa[i, roi_idx]).statistic
+        r = float(spearmanr(sc[i, roi_idx], sa[i, roi_idx]).statistic)
         if not np.isnan(r):
             vals.append(r)
     return float(np.mean(vals)) if vals else float("nan")
