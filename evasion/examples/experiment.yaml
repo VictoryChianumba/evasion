@@ -1,0 +1,30 @@
+# evasion experiment config
+# Run with: evasion run --config experiment.yaml
+
+# ---- data ----
+subject_id: 9
+data_loader: "utils.load_adv_data.load_adv_test_data"
+
+# ---- model ----
+# builder must accept n_channels, n_times, n_classes kwargs
+model_builder: "braindecode.models.EEGNetv4"
+checkpoint: "results/EEGNet/EEGNet_S{subject_id}_seed{seed}/checkpoint.pth"
+
+# ---- channels ----
+# set to "from_data" to use ch_names returned by your data loader
+ch_names: "from_data"
+roi_names: ["C3", "C4", "Cz"]
+
+# ---- attack config ----
+attacks: ["FGSM", "PGD", "FGSM_LP", "PGD_LP", "DeepFool"]
+budget_grid: [0.25, 0.5, 1.0, 2.0]
+lp_sigma_t: 3.0
+
+# ---- run config ----
+seeds: [42, 123, 2024, 31415, 999]
+attr_max_n: 128
+n_steps_ig: 16
+device: "auto"   # auto | cpu | cuda | mps
+
+# ---- output ----
+output_csv: "results/adversarial_results_9.csv"
