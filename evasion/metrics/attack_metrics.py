@@ -13,7 +13,8 @@ def channel_scores(E: torch.Tensor) -> np.ndarray:
     Returns:
         numpy array (N, C)
     """
-    return E.abs().mean(dim=-1).detach().cpu().numpy()
+    # Reduce all non-(N,C) dims so this works for (N,C,T) and (N,C,H,W).
+    return E.abs().flatten(2).mean(dim=-1).detach().cpu().numpy()
 
 
 def per_class_acc(
