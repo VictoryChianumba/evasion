@@ -11,11 +11,13 @@ def per_channel_clamp(x: torch.Tensor, vmin: torch.Tensor, vmax: torch.Tensor) -
 
 def smooth_delta_gauss(delta_t: torch.Tensor, sigma_t: float) -> torch.Tensor:
     """
-    Apply Gaussian smoothing to a perturbation tensor along the time axis.
+    Apply Gaussian smoothing to a perturbation tensor.
+    For 3D inputs (N, C, T), smooth along time.
+    For 4D inputs (N, C, H, W), smooth spatially.
     Produces low-pass (LP) attack variants.
 
     Args:
-        delta_t: perturbation tensor of shape (N, C, T)
+        delta_t: perturbation tensor of shape (N, C, T) or (N, C, H, W)
         sigma_t: Gaussian std in time-steps. If <= 0, returns delta_t unchanged.
     """
     if sigma_t is None or sigma_t <= 0:
@@ -26,8 +28,14 @@ def smooth_delta_gauss(delta_t: torch.Tensor, sigma_t: float) -> torch.Tensor:
     kernel = torch.exp(-0.5 * (x / sigma_t).pow(2))
     kernel /= kernel.sum()
     C = delta_t.size(1)
-    kernel = kernel.expand(C, 1, -1)   # (C, 1, K)
-    return F.conv1d(delta_t, kernel, padding=radius, groups=C)
+    if delta_t.dim() == 3:
+        kernel_1d = kernel.expand(C, 1, -1)   # (C, 1, K)
+        return F.conv1d(delta_t, kernel_1d, padding=radius, groups=C)
+    if delta_t.dim() == 4:
+        kernel_2d = (kernel[:, None] * kernel[None, :]).to(device)
+        kernel_2d = kernel_2d.expand(C, 1, -1, -1)  # (C, 1, K, K)
+        return F.conv2d(delta_t, kernel_2d, padding=radius, groups=C)
+    raise ValueError(f"smooth_delta_gauss expects 3D or 4D tensor, got {delta_t.dim()}D")
 
 
 def snr_db(x: torch.Tensor, x_adv: torch.Tensor) -> np.ndarray:
